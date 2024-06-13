@@ -28,6 +28,9 @@ public class CaseManagerDTOMapper implements Function<CaseManager, CaseManagerDT
                 casemanager.getCreatedBy(),
                 casemanager.getModifiedBy(),
                 casemanager.getReligion(),
+                casemanager.getUsername(),
+                casemanager.getPassword(),
+                casemanager.getUser_id(),
                 casemanager.getPatients()
         );
     }

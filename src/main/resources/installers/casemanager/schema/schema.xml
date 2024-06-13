@@ -113,4 +113,25 @@
 			ALTER TABLE IF EXISTS case_manager_patients ADD COLUMN uuid character varying;
         </sql>
     </changeSet>
+    <changeSet failOnError="true" id="20240507-6" author="Victor">
+        <preConditions onFail="MARK_RAN">
+          <not>
+              <columnExists tableName="case_manager" columnName="username"/>
+          </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE IF EXISTS case_manager ADD COLUMN username character varying;
+            ALTER TABLE IF EXISTS case_manager ADD COLUMN password character varying;
+        </sql>
+    </changeSet>
+    <changeSet failOnError="true" id="20240508-6" author="Victor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="case_manager" columnName="user_id"/>
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE IF EXISTS case_manager ADD COLUMN user_id character varying;
+        </sql>
+    </changeSet>
 </databaseChangeLog>

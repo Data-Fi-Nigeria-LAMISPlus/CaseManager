@@ -93,6 +93,8 @@ public class AssignCaseMangerService {
         asignPatientRepository.deleteById(patientId);
         return "Patient unassigned successfully";
     }
-    
-   
+
+    public List<AssignedPatient> getAllAssignedByUserid(String userId) {
+        return asignPatientRepository.getAssignedPatientsByUserIds(userId);
+    }
 }

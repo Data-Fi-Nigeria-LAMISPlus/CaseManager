@@ -45,6 +45,12 @@ public class CaseManager {
     private Boolean active;
     @Column(name = "religion")
     private String religion;
+    @Column(name = "username")
+    private String username;
+    @Column(name = "password")
+    private String password;
+    @Column(name = "user_id")
+    private String user_id;
     @Column(name = "date_modified")
     private LocalDateTime dateModified;
     @Column(name = "create_date")

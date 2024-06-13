@@ -16,6 +16,11 @@ public interface AsignPatientRepository extends JpaRepository<AssignedPatient, I
 	@Query(value = "SELECT person_uuid FROM case_manager_patients\n" +
 			" WHERE facility_id = ?1", nativeQuery = true)
 	List<String> getAssignedPatientPatientUuids(Long patientId);
+
+	@Query(value = "SELECT cmp.* from case_manager cm\n" +
+			"JOIN case_manager_patients cmp on cmp.case_manager_id = cm.id\n" +
+			"WHERE user_id = ?1", nativeQuery = true)
+	List<AssignedPatient> getAssignedPatientsByUserIds(String userId);
 	
 	@Query(value = "WITH bio_data AS (SELECT p.facility_id as facilityId, p.id, p.uuid as personUuid, CAST(p.archived as BOOLEAN) as archived, p.uuid,p.hospital_number as hospitalNumber, \n" +
 			"\t\t\t  p.surname, p.first_name as firstName,\n" +

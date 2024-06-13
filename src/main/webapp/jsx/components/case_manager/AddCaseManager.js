@@ -78,6 +78,9 @@ const AddCaseManager = (props) => {
     created_by: "",
     modified_by: "",
     active: "",
+    username: "",
+    password: "",
+    userId: "",
   });
   const [facilities, setFacilities] = useState([]);
   const [contactPhone, setContactPhone] = useState("");
@@ -90,7 +93,9 @@ const AddCaseManager = (props) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        // console.log(response.data);
+        // console.log(
+        //   response.data.applicationUserOrganisationUnits[0].organisationUnitId
+        // );
         setFacilities(response.data.applicationUserOrganisationUnits);
         setUser(`${response.data.firstName} ${response.data.lastName}`);
       })
@@ -125,6 +130,8 @@ const AddCaseManager = (props) => {
     temp.facility = data.facilityId ? "" : "Facility is required.";
     temp.religion = data.religion ? "" : "Religion is required.";
     temp.address = data.address ? "" : "Address is required.";
+    temp.username = data.username ? "" : "Username is required.";
+    temp.password = data.password ? "" : "Password is required.";
 
     setErrors({
       ...temp,
@@ -140,32 +147,82 @@ const AddCaseManager = (props) => {
     data.active = true;
 
     if (validateInputs()) {
+      const user = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        username: data.username,
+        email: data.email,
+        phone: data.phoneNumber,
+        role: "",
+        designation: data.designation,
+        gender: data.sex,
+        dateOfBirth: data.dateOfBirth,
+        password: data.password,
+        adminRegistration: true,
+        details: {},
+        userName: data.username,
+        phoneNumber: data.phoneNumber,
+        roles: ["User"],
+        facilityIds: [facilities[0].organisationUnitId],
+      };
+
       await axios
-        .post(`${baseUrl}casemanager/create`, data, {
+        .post(`${baseUrl}users`, user, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        .then((resp) => {
-          console.log(resp);
-          toast.success("Case manager added successfully");
-          setData({
-            designation: "",
-            firstName: "",
-            lastName: "",
-            sex: "",
-            phoneNumber: "",
-            facilityId: "",
-            religion: "",
-            address: "",
-          });
+        .then((response) => {
+          console.log("user " + response.data);
+
+          const caseManagerDetails = {
+            designation: data.designation,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            sex: data.sex,
+            phoneNumber: data.phoneNumber,
+            facilityId: data.facilityId,
+            religion: data.religion,
+            address: data.address,
+            created_by: data.created_by,
+            modified_by: data.modified_by,
+            active: data.active,
+            username: data.username,
+            password: "********",
+            user_id: response.data,
+          };
+
+          axios
+            .post(`${baseUrl}casemanager/create`, caseManagerDetails, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+            .then((resp) => {
+              console.log(resp);
+              toast.success("Case manager added successfully");
+              console.log(resp.data);
+
+              setData({
+                designation: "",
+                firstName: "",
+                lastName: "",
+                sex: "",
+                phoneNumber: "",
+                facilityId: "",
+                religion: "",
+                address: "",
+                username: "",
+                password: "",
+              });
+              props.getAllCaseManagers();
+              props.togglestatus();
+            })
+            .catch((err) => {
+              toast.error(
+                "Something went wrong. Please try again... " + err.message
+              );
+            });
         })
-        .catch((err) => {
-          //console.log(err);
-          toast.error(
-            "Something went wrong. Please try again... " + err.message
-          );
+        .catch((error) => {
+          toast.error(`An error occurred, while adding user`);
         });
-      props.getAllCaseManagers();
-      props.togglestatus();
     }
   };
 
@@ -353,6 +410,56 @@ const AddCaseManager = (props) => {
                       </select>
                       {errors.facility !== "" ? (
                         <span className={classes.error}>{errors.facility}</span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label for="username" className={classes.label}>
+                        Username <span style={{ color: "red" }}> *</span>
+                      </Label>
+                      <Input
+                        type="text"
+                        name="username"
+                        id="username"
+                        value={data.username}
+                        onChange={handleInputChange}
+                        className="form-control"
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.2rem",
+                        }}
+                      />
+                      {errors.username !== "" ? (
+                        <span className={classes.error}>{errors.username}</span>
+                      ) : (
+                        ""
+                      )}
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label for="password" className={classes.label}>
+                        Password <span style={{ color: "red" }}> *</span>
+                      </Label>
+                      <Input
+                        type="text"
+                        name="password"
+                        id="password"
+                        value={data.password}
+                        onChange={handleInputChange}
+                        className="form-control"
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.2rem",
+                        }}
+                      />
+                      {errors.password !== "" ? (
+                        <span className={classes.error}>{errors.password}</span>
                       ) : (
                         ""
                       )}

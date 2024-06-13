@@ -42,7 +42,9 @@ public class CaseManagerService {
         caseManagerobj.setReligion(caseManagerRequest.getReligion());
         caseManagerobj.setUuid(UUID.randomUUID().toString());
         caseManagerobj.setCreateDate(LocalDateTime.now());
-
+        caseManagerobj.setUsername(caseManagerRequest.getUsername());
+        caseManagerobj.setPassword(caseManagerRequest.getPassword());
+        caseManagerobj.setUser_id(caseManagerRequest.getUser_id());
         return caseManagerRepository.save(caseManagerobj);
     }
 
@@ -67,6 +69,8 @@ public class CaseManagerService {
                 existingCaseManager.setArchived(caseManagerRequest.getArchived());
                 existingCaseManager.setActive(caseManagerRequest.getActive());
                 existingCaseManager.setReligion(caseManagerRequest.getReligion());
+                existingCaseManager.setUsername(caseManagerRequest.getUsername());
+                existingCaseManager.setPassword(caseManagerRequest.getPassword());
 
                 return caseManagerRepository.save(existingCaseManager);
             }else {

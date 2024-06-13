@@ -1,6 +1,6 @@
 basePackage: org.lamisplus.modules.casemanager
 name: CaseManagerModule
-dependencies: { PatientModule: 2.0.2 }
+dependencies: { PatientModule: 2.0.3 }
 store: true
 menus:
   - icon: fa fa-users

@@ -65,7 +65,7 @@ const EditCaseManager = (props) => {
   const classes = useStyles();
   const [user, setUser] = useState("");
 
-  //console.log(props.casemanager);
+  console.log(props.casemanager);
 
   const [data, setData] = useState({
     designation: props.casemanager?.designation,
@@ -79,6 +79,8 @@ const EditCaseManager = (props) => {
     created_by: props.casemanager?.createdBy,
     modified_by: "",
     active: props.casemanager?.active,
+    username: props.casemanager?.username,
+    password: "**********",
   });
 
   const Facilities = () => {
@@ -103,7 +105,7 @@ const EditCaseManager = (props) => {
   const [contactPhone, setContactPhone] = useState(data.phoneNumber);
 
   useEffect(() => {
-    setData(props.casemanager);
+    setData({ ...props.casemanager, password: "********" });
   }, [props.casemanager]);
 
   const handleInputChange = (e) => {
@@ -292,6 +294,46 @@ const EditCaseManager = (props) => {
                           </option>
                         ))}
                       </select>
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label for="username" className={classes.label}>
+                        Username <span style={{ color: "red" }}> *</span>
+                      </Label>
+                      <Input
+                        type="text"
+                        name="username"
+                        id="username"
+                        value={data.username}
+                        onChange={handleInputChange}
+                        className="form-control"
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.2rem",
+                        }}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label for="password" className={classes.label}>
+                        Password <span style={{ color: "red" }}> *</span>
+                      </Label>
+                      <Input
+                        type="text"
+                        name="password"
+                        id="password"
+                        value={data.password}
+                        onChange={handleInputChange}
+                        className="form-control"
+                        style={{
+                          border: "1px solid #014D88",
+                          borderRadius: "0.2rem",
+                        }}
+                      />
                     </FormGroup>
                   </Col>
                 </Row>

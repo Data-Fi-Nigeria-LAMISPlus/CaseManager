@@ -20,4 +20,7 @@ public class CaseManagerRequest {
     private String religion;
     private String uuid;
     private Long facilityId;
+    private String username;
+    private String password;
+    private String user_id;
 }

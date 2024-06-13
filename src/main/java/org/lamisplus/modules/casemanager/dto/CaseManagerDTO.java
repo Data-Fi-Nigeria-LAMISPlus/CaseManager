@@ -30,5 +30,8 @@ public class CaseManagerDTO {
     private String createdBy;
     private String modifiedBy;
     private String religion;
+    private String username;
+    private String password;
+    private String user_id;
     private List<AssignedPatient> patients;
 }

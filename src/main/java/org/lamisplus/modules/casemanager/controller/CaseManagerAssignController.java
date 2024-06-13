@@ -34,4 +34,8 @@ public class CaseManagerAssignController {
     public String DeleteCaseManager(@PathVariable int id) throws Exception {
         return assignCaseMangerService.delete(id);
     }
+    @GetMapping("/casemanager-patients/{userId}")
+    public List<AssignedPatient> getAllAssignedPatients(@PathVariable String userId) {
+        return assignCaseMangerService.getAllAssignedByUserid(userId);
+    }
 }
