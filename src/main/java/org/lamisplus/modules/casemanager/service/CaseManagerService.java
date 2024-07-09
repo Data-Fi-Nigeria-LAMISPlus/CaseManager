@@ -71,6 +71,7 @@ public class CaseManagerService {
                 existingCaseManager.setReligion(caseManagerRequest.getReligion());
                 existingCaseManager.setUsername(caseManagerRequest.getUsername());
                 existingCaseManager.setPassword(caseManagerRequest.getPassword());
+                existingCaseManager.setUser_id(caseManagerRequest.getUser_id());
 
                 return caseManagerRepository.save(existingCaseManager);
             }else {
