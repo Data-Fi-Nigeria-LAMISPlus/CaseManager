@@ -65,7 +65,7 @@ const EditCaseManager = (props) => {
   const classes = useStyles();
   const [user, setUser] = useState("");
 
-  console.log(props.casemanager);
+  //console.log(props.casemanager);
 
   const [data, setData] = useState({
     designation: props.casemanager?.designation,
@@ -104,9 +104,9 @@ const EditCaseManager = (props) => {
 
   const [contactPhone, setContactPhone] = useState(data.phoneNumber);
 
-  // useEffect(() => {
-  //   setData({ ...props.casemanager, password: "********" });
-  // }, [props.casemanager]);
+  useEffect(() => {
+    setData({ ...props.casemanager, password: "********" });
+  }, [props.casemanager]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -177,6 +177,9 @@ const EditCaseManager = (props) => {
       password: "********",
       user_id: "",
     };
+
+    // console.log(userPayload);
+    // console.log(caseManagerDetails);
 
     const userID = parseInt(props.casemanager.user_id);
     console.log(props.casemanager.user_id);
