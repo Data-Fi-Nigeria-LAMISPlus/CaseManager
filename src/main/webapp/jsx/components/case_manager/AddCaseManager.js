@@ -162,7 +162,7 @@ const AddCaseManager = (props) => {
         details: {},
         userName: data.username,
         phoneNumber: data.phoneNumber,
-        roles: ["User"],
+        roles: [4],
         facilityIds: [facilities[0].organisationUnitId],
       };
 
@@ -216,7 +216,7 @@ const AddCaseManager = (props) => {
             })
             .catch((err) => {
               toast.error(
-                "Something went wrong. Please try again... " + err.message
+                "Something went wrong. Please try again... " + err.message,
               );
             });
         })
