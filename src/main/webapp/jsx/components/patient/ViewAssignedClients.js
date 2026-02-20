@@ -205,8 +205,19 @@ const ViewAssignedClients = (props) => {
     let patientArray = [];
 
     patient.forEach((patientChange) => {
-      const { id, hospitalNo, fullName, sex, dob, age, phone, state, lga } =
-        patientChange;
+      const {
+        id,
+        hospitalNo,
+        fullName,
+        sex,
+        dob,
+        age,
+        phone,
+        state,
+        lga,
+        facilityId,
+        personUuid,
+      } = patientChange;
       patientArray.push({
         id,
         hospitalNo,
@@ -217,6 +228,8 @@ const ViewAssignedClients = (props) => {
         phone,
         state,
         lga,
+        facilityId,
+        personUuid,
       });
     });
 
