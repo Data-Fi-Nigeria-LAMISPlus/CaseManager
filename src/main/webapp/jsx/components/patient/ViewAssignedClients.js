@@ -233,7 +233,7 @@ const ViewAssignedClients = (props) => {
       });
     });
 
-    //console.log(patientArray);
+    console.log(patientArray);
     localStorage.setItem("patient", JSON.stringify(patientArray));
   };
 

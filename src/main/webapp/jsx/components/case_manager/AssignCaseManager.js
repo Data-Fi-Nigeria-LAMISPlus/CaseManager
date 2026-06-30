@@ -312,71 +312,7 @@ const AssignCaseManager = (props) => {
                   </FormGroup>
                 </Col>
               </Row>
-              {/* <Row>
-                <Col>
-                  <FormGroup>
-                    <Label className={classes.label}>
-                      State <span style={{ color: "red" }}> *</span>
-                    </Label>
-                    <select
-                      className="form-control"
-                      name="state"
-                      id="state"
-                      onChange={getProvinces}
-                      value={assignedData.state}
-                      style={{
-                        border: "1px solid #014D88",
-                        borderRadius: "0.2rem",
-                      }}
-                    >
-                      <option value={""}></option>
-                      {states.map((value) => (
-                        <option
-                          key={value.id}
-                          value={`${value.id} ${value.name}`}
-                        >
-                          {value.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.state !== "" ? (
-                      <span className={classes.error}>{errors.state}</span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </Col>
-                <Col>
-                  <FormGroup>
-                    <Label className={classes.label}>
-                      LGA <span style={{ color: "red" }}> *</span>
-                    </Label>
-                    <select
-                      className="form-control"
-                      name="lga"
-                      id="lga"
-                      value={assignedData.lga}
-                      onChange={handleInputChange}
-                      style={{
-                        border: "1px solid #014D88",
-                        borderRadius: "0.2rem",
-                      }}
-                    >
-                      <option value={""}></option>
-                      {provinces.map((value, index) => (
-                        <option key={index} value={value.name}>
-                          {value.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.lga !== "" ? (
-                      <span className={classes.error}>{errors.lga}</span>
-                    ) : (
-                      ""
-                    )}
-                  </FormGroup>
-                </Col>
-              </Row> */}
+     
               {result !== null ? (
                 <Button
                   variant="contained"

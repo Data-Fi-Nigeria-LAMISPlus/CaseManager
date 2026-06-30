@@ -125,6 +125,7 @@ public class CaseManagerService {
         if(!stateOfResidence.isEmpty() && !lgaOfResidence.isEmpty() ){
             System.out.println(4);
             List<PatientListDTO> patientListDTOList1 = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndLga(facilityId, stateOfResidence, lgaOfResidence);
+            LOG.info("result size from db {}",patientListDTOList1.size());
             List<PatientListDTO> patientListDTOList = getPatientListDTOS(facilityId, patientListDTOList1);
             return  getPatientListDTOS(facilityId, patientListDTOList);
         }
