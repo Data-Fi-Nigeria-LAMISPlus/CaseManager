@@ -12,6 +12,7 @@ import org.lamisplus.modules.casemanager.repository.CaseManagerRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -96,96 +97,109 @@ public class CaseManagerService {
                 .map(caseManagerDTOMapper)
                 .collect(Collectors.toList());
     }
-    public List<PatientListDTO> getPatientListDTOS(Long facilityId, String stateOfResidence, String lgaOfResidence,
-                                                   String gender,
-                                                   String targetGroup) {
-        
-        
-        if(stateOfResidence.isEmpty() && lgaOfResidence.isEmpty() && gender.isEmpty() && targetGroup.isEmpty()){
-            System.out.println(1);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacility(facilityId);
-            return getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
-        
-        if(!stateOfResidence.isEmpty() && !lgaOfResidence.isEmpty() && !gender.isEmpty() ){
-            System.out.println(2);
-            List<PatientListDTO> patientListDTOList1 = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndLgaAndGender(facilityId, stateOfResidence, lgaOfResidence, gender);
-            List<PatientListDTO> patientListDTOList = getPatientListDTOS(facilityId, patientListDTOList1);
-            return  getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
-        if(!stateOfResidence.isEmpty() && !lgaOfResidence.isEmpty() && !targetGroup.isEmpty() ){
-            System.out.println(3);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndLgaAndTargetGroup(facilityId, stateOfResidence, lgaOfResidence, targetGroup);
-            return getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
-        // state
-        if(!stateOfResidence.isEmpty() && !lgaOfResidence.isEmpty() ){
-            System.out.println(4);
-            List<PatientListDTO> patientListDTOList1 = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndLga(facilityId, stateOfResidence, lgaOfResidence);
-            LOG.info("result size from db {}",patientListDTOList1.size());
-            List<PatientListDTO> patientListDTOList = getPatientListDTOS(facilityId, patientListDTOList1);
-            return  getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
-        if(!stateOfResidence.isEmpty() && !gender.isEmpty()){
-            System.out.println(5);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndGender(facilityId, stateOfResidence, gender);
-            return  getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
-        
-        if(!stateOfResidence.isEmpty() && !targetGroup.isEmpty()){
-            System.out.println(6);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndTargetGroup(facilityId, stateOfResidence, targetGroup);
-            return  getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
-        
-        //lga
-        
-        if( !lgaOfResidence.isEmpty() && !gender.isEmpty() ){
-            System.out.println(7);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndLgaAndGender(facilityId, lgaOfResidence, gender);
-            return  getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
+    public List<PatientListDTO> getPatientListDTOS(Long facilityId, Integer stateOfResidence, Integer lgaOfResidence) {
+//        LOG.info("facilityId: {}", facilityId);
+//        LOG.info("stateOfResidence: {}", stateOfResidence);
+//        LOG.info("lgaOfResidence: {}", lgaOfResidence);
 
-        
-        if(!lgaOfResidence.isEmpty() && !targetGroup.isEmpty()){
-            System.out.println(9);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndLgaAndTargetGroup(facilityId, lgaOfResidence, targetGroup);
-            return  getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
-        
-        if(!targetGroup.isEmpty() ){
-            System.out.println(11);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndTargetGroup(facilityId, targetGroup);
-            return getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        if(!lgaOfResidence.isEmpty()){
-            System.out.println(12);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndLgaOfResidence(facilityId, lgaOfResidence);
-            return getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
-        if(!stateOfResidence.isEmpty()){
-            System.out.println(13);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndStateOfResidence(facilityId, stateOfResidence);
-            return getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        
-        if(!gender.isEmpty()){
-            System.out.println(14);
-            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndGender(facilityId, gender);
-            return getPatientListDTOS(facilityId, patientListDTOList);
-        }
-        System.out.println(15);
-        List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOs(facilityId, stateOfResidence, lgaOfResidence, gender, targetGroup);
+        String facilityIdStr = facilityId != null ? facilityId.toString() : "";
+        String stateStr = stateOfResidence != null ? stateOfResidence.toString() : "";
+        String lgaStr = lgaOfResidence != null ? lgaOfResidence.toString() : "";
+
+
+        List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacility(
+                facilityIdStr,
+                stateStr,
+                lgaStr
+        );
+        LOG.info("Result size: {}", patientListDTOList.size());
         return getPatientListDTOS(facilityId, patientListDTOList);
+
+//        if(stateOfResidence.isEmpty() && lgaOfResidence.isEmpty()){
+//            System.out.println(1);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacility(facilityId);
+//            return getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//
+//        if(!stateOfResidence.isEmpty() && !lgaOfResidence.isEmpty() && !gender.isEmpty() ){
+//            System.out.println(2);
+//            List<PatientListDTO> patientListDTOList1 = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndLgaAndGender(facilityId, stateOfResidence, lgaOfResidence, gender);
+//            List<PatientListDTO> patientListDTOList = getPatientListDTOS(facilityId, patientListDTOList1);
+//            return  getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//        if(!stateOfResidence.isEmpty() && !lgaOfResidence.isEmpty() && !targetGroup.isEmpty() ){
+//            System.out.println(3);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndLgaAndTargetGroup(facilityId, stateOfResidence, lgaOfResidence, targetGroup);
+//            return getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//        // state
+//        if(!stateOfResidence.isEmpty() && !lgaOfResidence.isEmpty() ){
+//            System.out.println(4);
+//            List<PatientListDTO> patientListDTOList1 = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndLga(facilityId, stateOfResidence, lgaOfResidence);
+//            LOG.info("result size from db {}",patientListDTOList1.size());
+//            List<PatientListDTO> patientListDTOList = getPatientListDTOS(facilityId, patientListDTOList1);
+//            return  getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//        if(!stateOfResidence.isEmpty() && !gender.isEmpty()){
+//            System.out.println(5);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndGender(facilityId, stateOfResidence, gender);
+//            return  getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//
+//        if(!stateOfResidence.isEmpty() && !targetGroup.isEmpty()){
+//            System.out.println(6);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndStateAndTargetGroup(facilityId, stateOfResidence, targetGroup);
+//            return  getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//
+//        //lga
+//
+//        if( !lgaOfResidence.isEmpty() && !gender.isEmpty() ){
+//            System.out.println(7);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndLgaAndGender(facilityId, lgaOfResidence, gender);
+//            return  getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//
+//
+//        if(!lgaOfResidence.isEmpty() && !targetGroup.isEmpty()){
+//            System.out.println(9);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndLgaAndTargetGroup(facilityId, lgaOfResidence, targetGroup);
+//            return  getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//
+//        if(!targetGroup.isEmpty() ){
+//            System.out.println(11);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndTargetGroup(facilityId, targetGroup);
+//            return getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//        if(!lgaOfResidence.isEmpty()){
+//            System.out.println(12);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndLgaOfResidence(facilityId, lgaOfResidence);
+//            return getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//        if(!stateOfResidence.isEmpty()){
+//            System.out.println(13);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndStateOfResidence(facilityId, stateOfResidence);
+//            return getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//
+//        if(!gender.isEmpty()){
+//            System.out.println(14);
+//            List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOsByFacilityAndGender(facilityId, gender);
+//            return getPatientListDTOS(facilityId, patientListDTOList);
+//        }
+//        System.out.println(15);
+//        List<PatientListDTO> patientListDTOList = asignPatientRepository.getPatientListDTOs(facilityId, stateOfResidence, lgaOfResidence, gender, targetGroup);
+        //return getPatientListDTOS(facilityId, patientListDTOList);
     }
     
     

@@ -32,11 +32,12 @@ public class CaseManagerController {
     @GetMapping("/patients/{facilityId}")
     public ResponseEntity<List<PatientListDTO>> GetPatientsForCaseManagerAssignment(
             @PathVariable("facilityId") Long facilityId,
-            @RequestParam(value = "stateOfResidence", defaultValue = "", required = false)  String stateOfResidence,
-            @RequestParam(value = "lgaOfResidence",  defaultValue = "", required = false)  String lgaOfResidence,
-            @RequestParam(value = "gender",  defaultValue = "", required = false)  String gender,
-            @RequestParam(value = "targetGroup",  defaultValue = "", required = false)  String targetGroup){
-        return  ResponseEntity.ok(caseManagerService.getPatientListDTOS(facilityId, stateOfResidence, lgaOfResidence,gender,targetGroup));
+            @RequestParam(value = "stateOfResidence", required = false)  Integer stateOfResidence,
+            @RequestParam(value = "lgaOfResidence", required = false)  Integer lgaOfResidence
+//            @RequestParam(value = "gender",  defaultValue = "", required = false)  String gender,
+//            @RequestParam(value = "targetGroup",  defaultValue = "", required = false)  String targetGroup
+    ){
+        return  ResponseEntity.ok(caseManagerService.getPatientListDTOS(facilityId, stateOfResidence, lgaOfResidence));
     }
     
     

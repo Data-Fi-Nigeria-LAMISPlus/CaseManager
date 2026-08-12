@@ -68,84 +68,112 @@ public interface AsignPatientRepository extends JpaRepository<AssignedPatient, I
 	                                        String targetGroup);
 	
 	@Query(value = "WITH address_data AS (\n" +
-			"\tSELECT DISTINCT ON (p.id)\n" +
-			"\t\tp.id,\n" +
-			"\t\tREPLACE(REPLACE(REPLACE(address_object->>'line', '\\\\', ''), ']', ''), '[', '') AS address,\n" +
-			"\t\tCASE \n" +
-			"\t\t\tWHEN address_object->>'stateId' ~ '^\\\\d+$' THEN address_object->>'stateId'\n" +
-			"\t\t\tELSE NULL\n" +
-			"\t\tEND AS stateId,\n" +
-			"\t\tCASE \n" +
-			"\t\t\tWHEN address_object->>'district' ~ '^\\\\d+$' THEN address_object->>'district'\n" +
-			"\t\t\tELSE NULL\n" +
-			"\t\tEND AS lgaId\n" +
-			"\tFROM patient_person p\n" +
-			"\tLEFT JOIN LATERAL jsonb_array_elements(p.address->'address') address_object ON TRUE\n" +
-			"\tORDER BY p.id\n" +
+			"    SELECT DISTINCT ON (p.id)\n" +
+			"        p.id,\n" +
+			"        REPLACE(REPLACE(REPLACE(address_object->>'line', '\\\\', ''), ']', ''), '[', '') AS address,\n" +
+			"        CASE\n" +
+			"            WHEN address_object->>'stateId' ~ '^\\d+$' THEN address_object->>'stateId'\n" +
+			"            ELSE NULL\n" +
+			"        END AS stateId,\n" +
+			"        CASE\n" +
+			"            WHEN address_object->>'district' ~ '^\\d+$' THEN address_object->>'district'\n" +
+			"            ELSE NULL\n" +
+			"        END AS lgaId\n" +
+			"    FROM patient_person p\n" +
+			"    CROSS JOIN LATERAL jsonb_array_elements(p.address->'address') address_object\n" +
+			"    ORDER BY p.id\n" +
 			"),\n" +
 			"\n" +
 			"facility_identifier AS (\n" +
-			"\tSELECT DISTINCT ON (organisation_unit_id)\n" +
-			"\t\torganisation_unit_id,\n" +
-			"\t\tcode\n" +
-			"\tFROM base_organisation_unit_identifier\n" +
-			"\tORDER BY organisation_unit_id\n" +
+			"    SELECT DISTINCT ON (organisation_unit_id)\n" +
+			"        organisation_unit_id,\n" +
+			"        code\n" +
+			"    FROM base_organisation_unit_identifier\n" +
+			"    ORDER BY organisation_unit_id\n" +
+			"),\n" +
+			"\n" +
+			"filtered_facilities AS (\n" +
+			"    SELECT \n" +
+			"        f.id AS facility_id,\n" +
+			"        f.name AS facility_name,\n" +
+			"        f.parent_organisation_unit_id AS lga_id,\n" +
+			"        lga.name AS lga_name,\n" +
+			"        lga.parent_organisation_unit_id AS state_id,\n" +
+			"        state.name AS state_name\n" +
+			"    FROM base_organisation_unit f\n" +
+			"    INNER JOIN base_organisation_unit lga ON lga.id = f.parent_organisation_unit_id\n" +
+			"    INNER JOIN base_organisation_unit state ON state.id = lga.parent_organisation_unit_id\n" +
+			"    WHERE (f.id = CAST(NULLIF(?1, '') AS BIGINT) OR ?1 IS NULL OR ?1 = '')\n" +
+			"      AND (state.id = CAST(NULLIF(?2, '') AS BIGINT) OR ?2 IS NULL OR ?2 = '')\n" +
+			"      AND (lga.id = CAST(NULLIF(?3, '') AS BIGINT) OR ?3 IS NULL OR ?3 = '')\n" +
 			"),\n" +
 			"\n" +
 			"bio_data AS (\n" +
-			"\tSELECT DISTINCT ON (p.uuid)\n" +
-			"\t\tp.facility_id AS facilityId,\n" +
-			"\t\tp.id,\n" +
-			"\t\tp.uuid AS personUuid,\n" +
-			"\t\tp.hospital_number AS hospitalNumber,\n" +
-			"\t\tp.surname,\n" +
-			"\t\tp.first_name AS firstName,\n" +
-			"\t\tp.date_of_birth as dateOfBirth, \n" +
-			"\t\tEXTRACT(YEAR FROM AGE(NOW(), p.date_of_birth)) AS age,\n" +
-			"\t\tp.sex AS gender,\n" +
-			"\t\tfacility.name AS facilityName,\n" +
-			"\t\tfi.code AS datimId,\n" +
-			"\t\tad.address,\n" +
-			"\t\tp.contact_point->'contactPoint'->0->'value'->>0 AS phone,\n" +
-			"\t\tfacility_lga.name as lga, facility_state.name as state \n" +
-			"\tFROM patient_person p\n" +
-			"\tLEFT JOIN address_data ad ON ad.id = p.id\n" +
-			"\tINNER JOIN base_organisation_unit facility ON facility.id = p.facility_id\n" +
-			"\tINNER JOIN base_organisation_unit facility_lga ON facility_lga.id=facility.parent_organisation_unit_id\n" +
-			"\tINNER JOIN base_organisation_unit facility_state ON facility_state.id=facility_lga.parent_organisation_unit_id\n" +
-			"\tLEFT JOIN facility_identifier fi ON fi.organisation_unit_id = p.facility_id\n" +
-			"\tINNER JOIN hiv_enrollment_commencement h ON h.person_uuid = p.uuid\n" +
-			"\tWHERE h.archived = 0\n" +
-			"\t  AND h.facility_id = ?1\n" +
-			"\t  AND NOT EXISTS (\n" +
-			"\t\t  SELECT 1\n" +
-			"\t\t  FROM case_manager_patients cmp\n" +
-			"\t\t  WHERE cmp.person_uuid = p.uuid\n" +
-			"\t\t\t OR cmp.hospital_no = p.hospital_number\n" +
-			"\t  )\n" +
-			"\n" +
-			"\tORDER BY p.uuid\n" +
+			"    SELECT DISTINCT ON (p.uuid)\n" +
+			"        p.facility_id AS facilityId,\n" +
+			"        p.id AS patientId,\n" +
+			"        p.uuid AS personUuid,\n" +
+			"        p.hospital_number AS hospitalNumber,\n" +
+			"        p.surname,\n" +
+			"        p.first_name AS firstName,\n" +
+			"        p.date_of_birth AS dateOfBirth,\n" +
+			"        EXTRACT(YEAR FROM AGE(NOW(), p.date_of_birth)) AS age,\n" +
+			"        p.sex AS gender,\n" +
+			"        ff.facility_name AS facilityName,\n" +
+			"        fi.code AS datimId,\n" +
+			"        ad.address,\n" +
+			"        p.contact_point->'contactPoint'->0->'value'->>0 AS phone,\n" +
+			"        ff.lga_name AS lga,\n" +
+			"        ff.state_name AS state\n" +
+			"    FROM patient_person p\n" +
+			"    INNER JOIN filtered_facilities ff ON ff.facility_id = p.facility_id\n" +
+			"    LEFT JOIN address_data ad ON ad.id = p.id\n" +
+			"    LEFT JOIN facility_identifier fi ON fi.organisation_unit_id = p.facility_id\n" +
+			"    INNER JOIN hiv_enrollment_commencement h ON h.person_uuid = p.uuid\n" +
+			"    WHERE h.archived = 0\n" +
+			"      AND NOT EXISTS (\n" +
+			"          SELECT 1\n" +
+			"          FROM case_manager_patients cmp\n" +
+			"          WHERE cmp.person_uuid = p.uuid\n" +
+			"             OR cmp.hospital_no = p.hospital_number\n" +
+			"      )\n" +
+			"    ORDER BY p.uuid\n" +
 			"),\n" +
 			"\n" +
 			"enrollment_details AS (\n" +
-			"\tSELECT DISTINCT ON (h.person_uuid)\n" +
-			"\t\th.person_uuid,\n" +
-			"\t\th.unique_id AS uniqueId,\n" +
-			"\t\th.date_enrolled_in_hiv_care AS dateOfEnrollment\n" +
-			"\tFROM hiv_enrollment_commencement h\n" +
-			"\tWHERE h.archived = 0\n" +
-			"\t  AND h.facility_id = ?1\n" +
-			"\tORDER BY h.person_uuid, h.date_enrolled_in_hiv_care DESC\n" +
+			"    SELECT DISTINCT ON (h.person_uuid)\n" +
+			"        h.person_uuid,\n" +
+			"        h.unique_id AS uniqueId,\n" +
+			"        h.date_enrolled_in_hiv_care AS dateOfEnrollment\n" +
+			"    FROM hiv_enrollment_commencement h\n" +
+			"    INNER JOIN bio_data b ON b.personUuid = h.person_uuid\n" +
+			"    WHERE h.archived = 0\n" +
+			"    ORDER BY h.person_uuid, h.date_enrolled_in_hiv_care DESC\n" +
 			")\n" +
 			"\n" +
-			"SELECT DISTINCT ON (b.personUuid)\n" +
-			"\te.*,\n" +
-			"\tb.*\n" +
+			"SELECT \n" +
+			"    e.person_uuid AS enrollmentPersonUuid,\n" +
+			"    e.uniqueId,\n" +
+			"    e.dateOfEnrollment,\n" +
+			"    b.facilityId,\n" +
+			"    b.patientId,\n" +
+			"    b.personUuid,\n" +
+			"    b.hospitalNumber,\n" +
+			"    b.surname,\n" +
+			"    b.firstName,\n" +
+			"    b.dateOfBirth,\n" +
+			"    b.age,\n" +
+			"    b.gender,\n" +
+			"    b.facilityName,\n" +
+			"    b.datimId,\n" +
+			"    b.address,\n" +
+			"    b.phone,\n" +
+			"    b.lga,\n" +
+			"    b.state\n" +
 			"FROM bio_data b\n" +
-			"INNER JOIN enrollment_details e\n" +
-			"\tON e.person_uuid = b.personUuid\n" +
-			"ORDER BY b.personUuid;", nativeQuery = true)
-	List<PatientListDTO> getPatientListDTOsByFacility(Long facilityId);
+			"INNER JOIN enrollment_details e ON e.person_uuid = b.personUuid\n" +
+			"ORDER BY b.personUuid\n", nativeQuery = true)
+	List<PatientListDTO> getPatientListDTOsByFacility(String facilityId, String stateOfResidence, String lgaOfResidence);
 	
 	@Query(value = "WITH bio_data AS (SELECT p.facility_id as facilityId, p.id, p.uuid as personUuid, CAST(p.archived as BOOLEAN) as archived, p.uuid,p.hospital_number as hospitalNumber, \n" +
 			"\t\t\t  p.surname, p.first_name as firstName,\n" +
