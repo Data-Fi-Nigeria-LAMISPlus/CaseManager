@@ -70,20 +70,38 @@ public interface AsignPatientRepository extends JpaRepository<AssignedPatient, I
 	@Query(value = "WITH address_data AS (\n" +
 			"    SELECT DISTINCT ON (p.id)\n" +
 			"        p.id,\n" +
-			"        REPLACE(REPLACE(REPLACE(address_object->>'line', '\\\\', ''), ']', ''), '[', '') AS address,\n" +
+			"        REPLACE(\n" +
+			"            REPLACE(\n" +
+			"                REPLACE(\n" +
+			"                    address_object->>'line',\n" +
+			"                    '\\\\',\n" +
+			"                    ''\n" +
+			"                ),\n" +
+			"                ']',\n" +
+			"                ''\n" +
+			"            ),\n" +
+			"            '[',\n" +
+			"            ''\n" +
+			"        ) AS address,\n" +
 			"        CASE\n" +
-			"            WHEN address_object->>'stateId' ~ '^\\d+$' THEN address_object->>'stateId'\n" +
+			"            WHEN address_object->>'stateId' ~ '^\\d+$'\n" +
+			"            THEN CAST((address_object->>'stateId') AS BIGINT)\n" +
 			"            ELSE NULL\n" +
-			"        END AS stateId,\n" +
+			"        END AS state_id,\n" +
 			"        CASE\n" +
-			"            WHEN address_object->>'district' ~ '^\\d+$' THEN address_object->>'district'\n" +
+			"            WHEN address_object->>'district' ~ '^\\d+$'\n" +
+			"            THEN CAST((address_object->>'district') AS BIGINT)\n" +
 			"            ELSE NULL\n" +
-			"        END AS lgaId\n" +
+			"        END AS lga_id\n" +
 			"    FROM patient_person p\n" +
-			"    CROSS JOIN LATERAL jsonb_array_elements(p.address->'address') address_object\n" +
+			"    CROSS JOIN LATERAL jsonb_array_elements(\n" +
+			"        COALESCE(\n" +
+			"            p.address->'address',\n" +
+			"            CAST('[]' AS jsonb)\n" +
+			"        )\n" +
+			"    ) AS address_object\n" +
 			"    ORDER BY p.id\n" +
 			"),\n" +
-			"\n" +
 			"facility_identifier AS (\n" +
 			"    SELECT DISTINCT ON (organisation_unit_id)\n" +
 			"        organisation_unit_id,\n" +
@@ -91,23 +109,20 @@ public interface AsignPatientRepository extends JpaRepository<AssignedPatient, I
 			"    FROM base_organisation_unit_identifier\n" +
 			"    ORDER BY organisation_unit_id\n" +
 			"),\n" +
-			"\n" +
-			"filtered_facilities AS (\n" +
-			"    SELECT \n" +
+			"facility_data AS (\n" +
+			"    SELECT\n" +
 			"        f.id AS facility_id,\n" +
 			"        f.name AS facility_name,\n" +
-			"        f.parent_organisation_unit_id AS lga_id,\n" +
-			"        lga.name AS lga_name,\n" +
-			"        lga.parent_organisation_unit_id AS state_id,\n" +
-			"        state.name AS state_name\n" +
+			"        lga.id AS facility_lga_id,\n" +
+			"        lga.name AS facility_lga_name,\n" +
+			"        state.id AS facility_state_id,\n" +
+			"        state.name AS facility_state_name\n" +
 			"    FROM base_organisation_unit f\n" +
-			"    INNER JOIN base_organisation_unit lga ON lga.id = f.parent_organisation_unit_id\n" +
-			"    INNER JOIN base_organisation_unit state ON state.id = lga.parent_organisation_unit_id\n" +
-			"    WHERE (f.id = CAST(NULLIF(?1, '') AS BIGINT) OR ?1 IS NULL OR ?1 = '')\n" +
-			"      AND (state.id = CAST(NULLIF(?2, '') AS BIGINT) OR ?2 IS NULL OR ?2 = '')\n" +
-			"      AND (lga.id = CAST(NULLIF(?3, '') AS BIGINT) OR ?3 IS NULL OR ?3 = '')\n" +
+			"    INNER JOIN base_organisation_unit lga\n" +
+			"        ON lga.id = f.parent_organisation_unit_id\n" +
+			"    INNER JOIN base_organisation_unit state\n" +
+			"        ON state.id = lga.parent_organisation_unit_id\n" +
 			"),\n" +
-			"\n" +
 			"bio_data AS (\n" +
 			"    SELECT DISTINCT ON (p.uuid)\n" +
 			"        p.facility_id AS facilityId,\n" +
@@ -117,20 +132,37 @@ public interface AsignPatientRepository extends JpaRepository<AssignedPatient, I
 			"        p.surname,\n" +
 			"        p.first_name AS firstName,\n" +
 			"        p.date_of_birth AS dateOfBirth,\n" +
-			"        EXTRACT(YEAR FROM AGE(NOW(), p.date_of_birth)) AS age,\n" +
+			"        EXTRACT(\n" +
+			"            YEAR FROM AGE(NOW(), p.date_of_birth)\n" +
+			"        ) AS age,\n" +
 			"        p.sex AS gender,\n" +
-			"        ff.facility_name AS facilityName,\n" +
+			"        fd.facility_name AS facilityName,\n" +
 			"        fi.code AS datimId,\n" +
 			"        ad.address,\n" +
-			"        p.contact_point->'contactPoint'->0->'value'->>0 AS phone,\n" +
-			"        ff.lga_name AS lga,\n" +
-			"        ff.state_name AS state\n" +
+			"        p.contact_point\n" +
+			"            -> 'contactPoint'\n" +
+			"            -> 0\n" +
+			"            -> 'value'\n" +
+			"            ->> 0 AS phone,\n" +
+			"        residence_lga.name AS lga,\n" +
+			"        residence_state.name AS state\n" +
 			"    FROM patient_person p\n" +
-			"    INNER JOIN filtered_facilities ff ON ff.facility_id = p.facility_id\n" +
-			"    LEFT JOIN address_data ad ON ad.id = p.id\n" +
-			"    LEFT JOIN facility_identifier fi ON fi.organisation_unit_id = p.facility_id\n" +
-			"    INNER JOIN hiv_enrollment_commencement h ON h.person_uuid = p.uuid\n" +
+			"    INNER JOIN facility_data fd\n" +
+			"        ON fd.facility_id = p.facility_id\n" +
+			"    LEFT JOIN address_data ad\n" +
+			"        ON ad.id = p.id\n" +
+			"    LEFT JOIN base_organisation_unit residence_lga\n" +
+			"        ON residence_lga.id = ad.lga_id\n" +
+			"    LEFT JOIN base_organisation_unit residence_state\n" +
+			"        ON residence_state.id = ad.state_id\n" +
+			"    LEFT JOIN facility_identifier fi\n" +
+			"        ON fi.organisation_unit_id = p.facility_id\n" +
+			"    INNER JOIN hiv_enrollment_commencement h\n" +
+			"        ON h.person_uuid = p.uuid\n" +
 			"    WHERE h.archived = 0\n" +
+			"      AND ( NULLIF(?1, '') IS NULL OR p.facility_id = CAST(NULLIF(?1, '') AS BIGINT) ) \n" +
+			"\t  AND ( NULLIF(?2, '') IS NULL OR ad.state_id = CAST(NULLIF(?2, '') AS BIGINT) ) \n" +
+			"\t  AND ( NULLIF(?3, '') IS NULL OR ad.lga_id = CAST(NULLIF(?3, '') AS BIGINT) )\n" +
 			"      AND NOT EXISTS (\n" +
 			"          SELECT 1\n" +
 			"          FROM case_manager_patients cmp\n" +
@@ -139,19 +171,20 @@ public interface AsignPatientRepository extends JpaRepository<AssignedPatient, I
 			"      )\n" +
 			"    ORDER BY p.uuid\n" +
 			"),\n" +
-			"\n" +
 			"enrollment_details AS (\n" +
 			"    SELECT DISTINCT ON (h.person_uuid)\n" +
 			"        h.person_uuid,\n" +
 			"        h.unique_id AS uniqueId,\n" +
 			"        h.date_enrolled_in_hiv_care AS dateOfEnrollment\n" +
 			"    FROM hiv_enrollment_commencement h\n" +
-			"    INNER JOIN bio_data b ON b.personUuid = h.person_uuid\n" +
+			"    INNER JOIN bio_data b\n" +
+			"        ON b.personUuid = h.person_uuid\n" +
 			"    WHERE h.archived = 0\n" +
-			"    ORDER BY h.person_uuid, h.date_enrolled_in_hiv_care DESC\n" +
+			"    ORDER BY\n" +
+			"        h.person_uuid,\n" +
+			"        h.date_enrolled_in_hiv_care DESC\n" +
 			")\n" +
-			"\n" +
-			"SELECT \n" +
+			"SELECT\n" +
 			"    e.person_uuid AS enrollmentPersonUuid,\n" +
 			"    e.uniqueId,\n" +
 			"    e.dateOfEnrollment,\n" +
@@ -171,8 +204,9 @@ public interface AsignPatientRepository extends JpaRepository<AssignedPatient, I
 			"    b.lga,\n" +
 			"    b.state\n" +
 			"FROM bio_data b\n" +
-			"INNER JOIN enrollment_details e ON e.person_uuid = b.personUuid\n" +
-			"ORDER BY b.personUuid\n", nativeQuery = true)
+			"INNER JOIN enrollment_details e\n" +
+			"    ON e.person_uuid = b.personUuid\n" +
+			"ORDER BY b.personUuid", nativeQuery = true)
 	List<PatientListDTO> getPatientListDTOsByFacility(String facilityId, String stateOfResidence, String lgaOfResidence);
 	
 	@Query(value = "WITH bio_data AS (SELECT p.facility_id as facilityId, p.id, p.uuid as personUuid, CAST(p.archived as BOOLEAN) as archived, p.uuid,p.hospital_number as hospitalNumber, \n" +
